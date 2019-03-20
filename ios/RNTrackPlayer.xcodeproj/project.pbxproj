@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7497EED82242D18C00FBB81F /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7497EED72242D18C00FBB81F /* Transcript.swift */; };
 		9A0CF10E2046E5AC0093A5DF /* PitchAlgorithms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CF10D2046E5AC0093A5DF /* PitchAlgorithms.swift */; };
 		9B0E282E1F07D76F00B71D2A /* RNTrackPlayerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0E282D1F07D76F00B71D2A /* RNTrackPlayerBridge.m */; };
 		9B0E282F1F07D76F00B71D2A /* RNTrackPlayerBridge.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B0E282C1F07D76F00B71D2A /* RNTrackPlayerBridge.h */; };
@@ -51,6 +52,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7497EED72242D18C00FBB81F /* Transcript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Transcript.swift; path = RNTrackPlayer/Transcript.swift; sourceTree = SOURCE_ROOT; };
 		9A0CF10D2046E5AC0093A5DF /* PitchAlgorithms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitchAlgorithms.swift; sourceTree = "<group>"; };
 		9B0E28291F07D76F00B71D2A /* libRNTrackPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNTrackPlayer.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B0E282C1F07D76F00B71D2A /* RNTrackPlayerBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNTrackPlayerBridge.h; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				9B0E282C1F07D76F00B71D2A /* RNTrackPlayerBridge.h */,
 				9B0E282D1F07D76F00B71D2A /* RNTrackPlayerBridge.m */,
 				9B58DF3A1F40C0F000C2105E /* RNTrackPlayer.swift */,
+				7497EED72242D18C00FBB81F /* Transcript.swift */,
 			);
 			path = RNTrackPlayer;
 			sourceTree = "<group>";
@@ -280,6 +283,7 @@
 				9B40782121F34CC800F61AA2 /* AVPlayerWrapperProtocol.swift in Sources */,
 				9B40782021F34CC800F61AA2 /* AVPlayerWrapperState.swift in Sources */,
 				9B78A2481F3F12C9002B5E3C /* MediaURL.swift in Sources */,
+				7497EED82242D18C00FBB81F /* Transcript.swift in Sources */,
 				9B40781721F34CC800F61AA2 /* AudioSession.swift in Sources */,
 				9B40781F21F34CC800F61AA2 /* QueueManager.swift in Sources */,
 				9B40782321F34CC800F61AA2 /* AVPlayerWrapperDelegate.swift in Sources */,

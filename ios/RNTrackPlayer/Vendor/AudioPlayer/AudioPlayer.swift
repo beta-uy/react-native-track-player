@@ -23,12 +23,15 @@ public protocol AudioPlayerDelegate: class {
     func audioPlayer(seekTo seconds: Int, didFinish: Bool)
     
     func audioPlayer(didUpdateDuration duration: Double)
-
+    
 }
 
 public class AudioPlayer: AVPlayerWrapperDelegate {
     
     private var _wrapper: AVPlayerWrapperProtocol
+    
+    // MARK: Beta Fork
+    var newTranscriptEvent: ((String) -> Void)?
     
     /// The wrapper around the underlying AVPlayer
     var wrapper: AVPlayerWrapperProtocol {
@@ -123,7 +126,7 @@ public class AudioPlayer: AVPlayerWrapperDelegate {
         get { return wrapper.isMuted }
         set { _wrapper.isMuted = newValue }
     }
-
+    
     public var rate: Float {
         get { return wrapper.rate }
         set { _wrapper.rate = newValue }
@@ -136,10 +139,15 @@ public class AudioPlayer: AVPlayerWrapperDelegate {
      
      - parameter infoCenter: The InfoCenter to update. Default is `MPNowPlayingInfoCenter.default()`.
      */
+    
+    // MARK: Beta Fork
     public init(avPlayer: AVPlayer = AVPlayer(),
                 nowPlayingInfoController: NowPlayingInfoController = NowPlayingInfoController(),
-                remoteCommandController: RemoteCommandController = RemoteCommandController()) {
-        self._wrapper = AVPlayerWrapper(avPlayer: avPlayer)
+                remoteCommandController: RemoteCommandController = RemoteCommandController(),
+                newTranscriptEvent: ((String) -> Void)?
+        ) {
+        self.newTranscriptEvent = newTranscriptEvent
+        self._wrapper = AVPlayerWrapper(avPlayer: avPlayer, newTranscriptEvent:newTranscriptEvent)
         self.nowPlayingInfoController = nowPlayingInfoController
         self.remoteCommandController = remoteCommandController
         
@@ -246,7 +254,7 @@ public class AudioPlayer: AVPlayerWrapperDelegate {
     
     func updateMetaValues(item: AudioItem) {
         guard automaticallyUpdateNowPlayingInfo else { return }
-
+        
         nowPlayingInfoController.set(keyValues: [
             MediaItemProperty.artist(item.getArtist()),
             MediaItemProperty.title(item.getTitle()),

@@ -9,6 +9,7 @@
 import Foundation
 import AVFoundation
 import MediaPlayer
+import Speech
 
 public enum PlaybackEndedReason: String {
     case playedUntilEnd
@@ -31,7 +32,8 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     let playerTimeObserver: AVPlayerTimeObserver
     let playerItemNotificationObserver: AVPlayerItemNotificationObserver
     let playerItemObserver: AVPlayerItemObserver
-
+    var newTranscriptEvent: ((String) -> Void)?
+    
     /**
      True if the last call to load(from:playWhenReady) had playWhenReady=true.
      */
@@ -45,8 +47,9 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         }
     }
     
-    public init(avPlayer: AVPlayer = AVPlayer()) {
+    public init(avPlayer: AVPlayer = AVPlayer(), newTranscriptEvent: ((String) -> Void)?) {
         self.avPlayer = avPlayer
+        self.newTranscriptEvent = newTranscriptEvent
         self.playerObserver = AVPlayerObserver(player: avPlayer)
         self.playerTimeObserver = AVPlayerTimeObserver(player: avPlayer, periodicObserverTimeInterval: timeEventFrequency.getTime())
         self.playerItemNotificationObserver = AVPlayerItemNotificationObserver()
@@ -83,7 +86,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         let seconds = avPlayer.currentTime().seconds
         return seconds.isNaN ? 0 : seconds
     }
-
+    
     var duration: TimeInterval {
         if let seconds = currentItem?.asset.duration.seconds, !seconds.isNaN {
             return seconds
@@ -107,7 +110,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
             playerTimeObserver.periodicObserverTimeInterval = timeEventFrequency.getTime()
         }
     }
-
+    
     var rate: Float {
         get { return avPlayer.rate }
         set { avPlayer.rate = newValue }
@@ -125,6 +128,11 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     
     func play() {
         avPlayer.play()
+        let observer = avPlayer.currentItem?.observe(\AVPlayerItem.tracks, options: [.new, .old], changeHandler: { (item, change) in
+            NSLog("[Transcript] tracks change \(item.tracks.count)")
+        })
+        
+        LiveTranscript.shared.installTap(player: self.avPlayer, newTranscriptEvent: self.newTranscriptEvent)
     }
     
     func pause() {
@@ -150,18 +158,18 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
             self.delegate?.AVWrapper(seekTo: Int(seconds), didFinish: finished)
         }
     }
-
+    
     func load(from url: URL, playWhenReady: Bool) {
         reset(soft: true)
         _playWhenReady = playWhenReady
         _state = .loading
-
+        
         // Set item
         let currentAsset = AVURLAsset(url: url)
         let currentItem = AVPlayerItem(asset: currentAsset, automaticallyLoadedAssetKeys: [Constants.assetPlayableKey])
         currentItem.preferredForwardBufferDuration = bufferDuration
         avPlayer.replaceCurrentItem(with: currentItem)
-
+        
         // Register for events
         playerTimeObserver.registerForBoundaryTimeEvents()
         playerObserver.startObserving()
@@ -205,14 +213,14 @@ extension AVPlayerWrapper: AVPlayerObserverDelegate {
     
     func player(statusDidChange status: AVPlayer.Status) {
         switch status {
-
+            
         case .readyToPlay:
             self._state = .ready
             if _playWhenReady {
                 self.play()
             }
             break
-
+            
         case .failed:
             self.delegate?.AVWrapper(failedWithError: avPlayer.error)
             break
