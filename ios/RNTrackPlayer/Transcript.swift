@@ -14,7 +14,7 @@ import AVFoundation
 public class LiveTranscript: NSObject {
     
     var recognitionTask:SFSpeechRecognitionTask?
-    let recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+    var recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
     var audioFormat: AudioStreamBasicDescription?
     var player: AVPlayer?
     var newTranscriptEvent: ((String) -> Void)?
@@ -23,18 +23,6 @@ public class LiveTranscript: NSObject {
     
     override init()  {
         super.init()
-        
-        self.recognitionRequest.shouldReportPartialResults = true
-        SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
-            if let error = error {
-                NSLog("[Transcription Live] [Error] \(error) desc \(error.localizedDescription)")
-            } else {
-                NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
-                guard let sendEvent = self.newTranscriptEvent else { return };
-                sendEvent(result?.bestTranscription.formattedString ?? "")
-            }
-        })
-        
     }
     
     
@@ -102,6 +90,24 @@ public class LiveTranscript: NSObject {
         LiveTranscript.shared.recognitionRequest.appendAudioSampleBuffer(sbuf!)
     }
     
+    
+    func restart() {
+        if (LiveTranscript.shared.recognitionTask != nil ){
+            LiveTranscript.shared.recognitionTask?.cancel()
+        }
+        LiveTranscript.shared.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        LiveTranscript.shared.recognitionRequest.shouldReportPartialResults = true
+        LiveTranscript.shared.recognitionTask = SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
+            if let error = error {
+                NSLog("[Transcription Live] [Error] \(error) desc \(error.localizedDescription)")
+//                LiveTranscript.shared.restart()
+            } else {
+                NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
+                guard let sendEvent = self.newTranscriptEvent else { return };
+                sendEvent(result?.bestTranscription.formattedString ?? "")
+            }
+        })
+    }
     
     func installTap(player: AVPlayer, newTranscriptEvent: ((String) -> Void)?) {
         LiveTranscript.shared.player = player

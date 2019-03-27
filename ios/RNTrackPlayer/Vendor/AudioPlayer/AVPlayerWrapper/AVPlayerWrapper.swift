@@ -25,6 +25,9 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         static let assetPlayableKey = "playable"
     }
     
+    // MARK: - Fork
+    
+    var timer: Timer = Timer()
     // MARK: - Properties
     
     let avPlayer: AVPlayer
@@ -127,16 +130,26 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     }
     
     func play() {
+        LiveTranscript.shared.restart()
         avPlayer.play()
-        let observer = avPlayer.currentItem?.observe(\AVPlayerItem.tracks, options: [.new, .old], changeHandler: { (item, change) in
-            NSLog("[Transcript] tracks change \(item.tracks.count)")
-        })
+
+        DispatchQueue.main.async {
+            self.timer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true, block: { timer in
+//                DispatchQueue.global(qos: .background).async {
+                    print("[Transcript] [reset]")
+                    LiveTranscript.shared.restart()
+//                }
+            })
+        }
         
         LiveTranscript.shared.installTap(player: self.avPlayer, newTranscriptEvent: self.newTranscriptEvent)
     }
     
     func pause() {
         avPlayer.pause()
+        if (timer != nil) {
+            timer.invalidate()
+        }
     }
     
     func togglePlaying() {
