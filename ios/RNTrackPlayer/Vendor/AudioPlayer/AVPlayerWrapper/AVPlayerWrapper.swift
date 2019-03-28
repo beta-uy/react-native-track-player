@@ -130,18 +130,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     }
     
     func play() {
-        LiveTranscript.shared.restart()
         avPlayer.play()
-
-        DispatchQueue.main.async {
-            self.timer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true, block: { timer in
-//                DispatchQueue.global(qos: .background).async {
-                    print("[Transcript] [reset]")
-                    LiveTranscript.shared.restart()
-//                }
-            })
-        }
-        
         LiveTranscript.shared.installTap(player: self.avPlayer, newTranscriptEvent: self.newTranscriptEvent)
     }
     
