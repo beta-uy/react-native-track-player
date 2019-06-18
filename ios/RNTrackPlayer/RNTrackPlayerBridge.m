@@ -98,4 +98,8 @@ RCT_EXTERN_METHOD(getState:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(resetTranscript:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
+
+RCT_EXTERN_METHOD(finishTranscript:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
+
 @end

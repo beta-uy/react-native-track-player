@@ -97,16 +97,67 @@ public class LiveTranscript: NSObject {
         }
         LiveTranscript.shared.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         LiveTranscript.shared.recognitionRequest.shouldReportPartialResults = true
+        var count = 0;
         LiveTranscript.shared.recognitionTask = SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
+            
+            
+
             if let error = error {
                 NSLog("[Transcription Live] [Error] \(error) desc \(error.localizedDescription)")
 //                LiveTranscript.shared.restart()
             } else {
                 NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
+                NSLog("[Transcription Live] [Type] Is Final Transcription: \(result?.isFinal)")
+                for segment in (result?.bestTranscription.segments ?? []) {
+                    NSLog("[Transcription Live] [Segment] Confidence: \(segment.confidence), Timestamp: \(segment.timestamp), Duration: \(segment.duration) \(segment.substring)")
+                }
+                NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
                 guard let sendEvent = self.newTranscriptEvent else { return };
-                sendEvent(result?.bestTranscription.formattedString ?? "")
+                
+                do {
+                    var transcriptionResultData:Dictionary<String, Any> = [
+                        "isFinal":  result?.isFinal ?? false,
+                        "content": result?.bestTranscription.segments.map({
+                            return [
+                                "duration": $0.duration,
+                                "confidence": $0.confidence,
+                                "text": $0.substring,
+                                "startTime": $0.timestamp,
+                                "endTime": $0.timestamp + $0.duration
+                            ];
+                        }) ?? []
+                    ];
+               
+
+                    if let theJSONData = try?  JSONSerialization.data(
+                        withJSONObject: transcriptionResultData,
+                        options: .prettyPrinted
+                        ),
+                        let theJSONText = String(data: theJSONData,
+                                                 encoding: String.Encoding.ascii) {
+                        sendEvent(theJSONText)
+                    }
+                    
+                } catch {
+                    print(error.localizedDescription)
+                }
+                
+                
+            }
+            
+            count += 1;
+            NSLog("[Transcription Live] Count: \(count)");
+            
+            if (count == 50) {
+                LiveTranscript.shared.recognitionTask?.finish();
             }
         })
+    }
+    
+    func finish() {
+        if (LiveTranscript.shared.recognitionTask != nil ){
+            LiveTranscript.shared.recognitionTask?.finish();
+        }
     }
     
     func installTap(player: AVPlayer, newTranscriptEvent: ((String) -> Void)?) {
