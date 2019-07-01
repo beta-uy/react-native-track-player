@@ -97,7 +97,6 @@ public class LiveTranscript: NSObject {
         }
         LiveTranscript.shared.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         LiveTranscript.shared.recognitionRequest.shouldReportPartialResults = true
-        var count = 0;
         LiveTranscript.shared.recognitionTask = SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
             
             
@@ -145,12 +144,6 @@ public class LiveTranscript: NSObject {
                 
             }
             
-            count += 1;
-            NSLog("[Transcription Live] Count: \(count)");
-            
-            if (count == 50) {
-                LiveTranscript.shared.recognitionTask?.finish();
-            }
         })
     }
     
