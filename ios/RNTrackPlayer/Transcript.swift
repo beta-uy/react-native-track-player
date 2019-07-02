@@ -116,6 +116,7 @@ public class LiveTranscript: NSObject {
                 do {
                     var transcriptionResultData:Dictionary<String, Any> = [
                         "isFinal":  result?.isFinal ?? false,
+                        "text": result?.bestTranscription.formattedString ?? "",
                         "content": result?.bestTranscription.segments.map({
                             return [
                                 "duration": $0.duration,
