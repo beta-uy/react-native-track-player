@@ -163,11 +163,15 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     
     func load(from url: URL, playWhenReady: Bool) {
         reset(soft: true)
+        
         _playWhenReady = playWhenReady
         _state = .loading
         
+        var options: [String: Any] = [:]
+        options = [AVURLAssetPreferPreciseDurationAndTimingKey: true]
+        
         // Set item
-        let currentAsset = AVURLAsset(url: url)
+        let currentAsset = AVURLAsset(url: url, options: options)
         let currentItem = AVPlayerItem(asset: currentAsset, automaticallyLoadedAssetKeys: [Constants.assetPlayableKey])
         currentItem.preferredForwardBufferDuration = bufferDuration
         avPlayer.replaceCurrentItem(with: currentItem)
