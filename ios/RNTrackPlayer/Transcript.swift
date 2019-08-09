@@ -9,15 +9,19 @@
 import Foundation
 import Speech
 import AVFoundation
-
+import AudioToolbox
 
 public class LiveTranscript: NSObject {
-    
+    s
     var recognitionTask:SFSpeechRecognitionTask?
     var recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
     var audioFormat: AudioStreamBasicDescription?
     var player: AVPlayer?
     var newTranscriptEvent: ((String) -> Void)?
+    
+    // Testing writing to buffer to file
+    var audioFileRef : ExtAudioFileRef?;
+    var shouldSaveAudioFile = false;
     
     static let shared = LiveTranscript()
     
@@ -32,14 +36,13 @@ public class LiveTranscript: NSObject {
                                                                         mFormatID: basicDescription.pointee.mFormatID, mFormatFlags: basicDescription.pointee.mFormatFlags, mBytesPerPacket: basicDescription.pointee.mBytesPerPacket, mFramesPerPacket: basicDescription.pointee.mFramesPerPacket, mBytesPerFrame: basicDescription.pointee.mBytesPerFrame, mChannelsPerFrame: basicDescription.pointee.mChannelsPerFrame, mBitsPerChannel: basicDescription.pointee.mBitsPerChannel, mReserved: basicDescription.pointee.mReserved)
     }
     
+    
     let tapProcess: MTAudioProcessingTapProcessCallback = {
         (tap, numberFrames, flags, bufferListInOut, numberFramesOut, flagsOut) in
-        //        print("[Transcript] callback \(tap, numberFrames, flags, bufferListInOut, numberFramesOut, flagsOut)\n")
-        
         
         
         let status_ = MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut)
-        //print("get audio: \(status)\n")
+        //        print("get audio: \(status)\n")
         if status_ != noErr {
             print("[Transcript] Error TAPGetSourceAudio :\(String(describing: status_.description))")
             return
@@ -55,6 +58,8 @@ public class LiveTranscript: NSObject {
         guard var audioFormat = LiveTranscript.shared.audioFormat else {
             return
         }
+        
+        
         status = CMAudioFormatDescriptionCreate(allocator: kCFAllocatorDefault, asbd: &audioFormat, layoutSize: 0, layout: nil, magicCookieSize: 0, magicCookie: nil, extensions: nil, formatDescriptionOut: &format)
         if status != noErr {
             print("[Transcript Live] Error CMAudioFormatDescriptionCreater :\(String(describing: status?.description))")
@@ -87,11 +92,71 @@ public class LiveTranscript: NSObject {
         }
         
         let currentSampleTime = CMSampleBufferGetOutputPresentationTimeStamp(sbuf!);
+        print("Going to write to creating...")
+        if LiveTranscript.shared.audioFileRef == nil {
+            let cfurl = getAudioFileCFURL()
+            if cfurl != nil{
+                print("created cfurl...")
+                let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16, sampleRate: 44100.0, channels: 1, interleaved: true)
+                status = ExtAudioFileCreateWithURL( cfurl!, kAudioFileWAVEType, (format?.streamDescription)!, nil, AudioFileFlags.eraseFile.rawValue,  &LiveTranscript.shared.audioFileRef)
+                if status != noErr {
+                    print("[Transcript Live] Error tapPrepare ExtAudioFileCreateWithURL :\(String(describing: status?.description))")
+                    return
+                }
+                print("Did ExtAudioFileCreateWithURL, gonna set properties...")
+                var codecManufacturer = kAppleSoftwareAudioCodecManufacturer
+                status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!, kExtAudioFileProperty_CodecManufacturer, UInt32(MemoryLayout<UInt32>.size), &codecManufacturer)
+                if status != noErr {
+                    print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_CodecManufacturer :\(String(describing: status?.description))")
+                    return
+                }
+                status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!, kExtAudioFileProperty_ClientDataFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size), &LiveTranscript.shared.audioFormat)
+                if status != noErr {
+                    print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_ClientDataFormat:\(String(describing: status?.description))")
+                    return
+                }
+                print("Set all properties!.")
+            } else {
+                print("[Transcript Live] Error tapPrepare getAudioFileCFURL nil")
+                return
+            }
+        } else if LiveTranscript.shared.shouldSaveAudioFile {
+            
+            // Saving to file...
+            print("Going to write to audiofile...")
+            if LiveTranscript.shared.audioFileRef != nil {
+                status = ExtAudioFileWrite(LiveTranscript.shared.audioFileRef!, UInt32(numberFrames), bufferListInOut)
+                if status != noErr {
+                    print("[Transcript Live] Error ExtAudioFileWrite :\(String(describing: status?.description))")
+                    return
+                }
+                print("Wrote to audio file")
+            }
+            
+        } else {
+            print("Should not write")
+     
+        }
         LiveTranscript.shared.recognitionRequest.appendAudioSampleBuffer(sbuf!)
     }
     
+    static func getAudioFileCFURL()->CFURL?{
+        do{
+            let fileManager = FileManager.default
+            let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
+            let audioFileURL = documentDirectory.appendingPathComponent("\(UUID().uuidString).wav")
+            print("[getAudioFileCFURL] audioFileURL: \(audioFileURL)")
+            let cfurl: CFURL = CFBridgingRetain(audioFileURL) as! CFURL;
+            return cfurl;
+        } catch{
+            print("[getAudioFileCFURL] Error :\(error.localizedDescription)")
+            return nil
+        }
+    }
     
     func restart() {
+        LiveTranscript.shared.shouldSaveAudioFile = false
+        LiveTranscript.shared.audioFileRef = nil
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.cancel()
         }
@@ -100,11 +165,12 @@ public class LiveTranscript: NSObject {
         LiveTranscript.shared.recognitionTask = SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
             
             
-
+            
             if let error = error {
                 NSLog("[Transcription Live] [Error] \(error) desc \(error.localizedDescription)")
-//                LiveTranscript.shared.restart()
+                //                LiveTranscript.shared.restart()
             } else {
+                LiveTranscript.shared.shouldSaveAudioFile = true
                 NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
                 NSLog("[Transcription Live] [Type] Is Final Transcription: \(result?.isFinal)")
                 for segment in (result?.bestTranscription.segments ?? []) {
@@ -127,8 +193,8 @@ public class LiveTranscript: NSObject {
                             ];
                         }) ?? []
                     ];
-               
-
+                    
+                    
                     if let theJSONData = try?  JSONSerialization.data(
                         withJSONObject: transcriptionResultData,
                         options: .prettyPrinted
@@ -149,12 +215,16 @@ public class LiveTranscript: NSObject {
     }
     
     func finish() {
+        LiveTranscript.shared.shouldSaveAudioFile = false
+        LiveTranscript.shared.audioFileRef = nil
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.finish();
         }
     }
     
     func installTap(player: AVPlayer, newTranscriptEvent: ((String) -> Void)?) {
+        LiveTranscript.shared.shouldSaveAudioFile = false
+        LiveTranscript.shared.audioFileRef = nil
         LiveTranscript.shared.player = player
         LiveTranscript.shared.newTranscriptEvent = newTranscriptEvent
         let playerItem = player.currentItem!
