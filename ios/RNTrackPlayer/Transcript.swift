@@ -97,36 +97,9 @@ public class LiveTranscript: NSObject {
         
         let currentSampleTime = CMSampleBufferGetOutputPresentationTimeStamp(sbuf!);
         print("Going to write to creating...")
-        if LiveTranscript.shared.shouldSaveAudioFile {
-            if LiveTranscript.shared.audioFileRef == nil  {
-                let cfurl = getAudioFileCFURL()
-                if cfurl != nil{
-                    let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16, sampleRate: 44100.0, channels: 1, interleaved: true)
-                    status = ExtAudioFileCreateWithURL( cfurl!, kAudioFileWAVEType, (format?.streamDescription)!, nil, AudioFileFlags.eraseFile.rawValue,  &LiveTranscript.shared.audioFileRef)
-                    if status != noErr {
-                        print("[Transcript Live] Error tapPrepare ExtAudioFileCreateWithURL :\(String(describing: status?.description))")
-                        return
-                    }
-                    print("Did ExtAudioFileCreateWithURL, gonna set properties...")
-                    var codecManufacturer = kAppleSoftwareAudioCodecManufacturer
-                    status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!,  kExtAudioFileProperty_CodecManufacturer, UInt32(MemoryLayout<UInt32>.size), &codecManufacturer)
-                    if status != noErr {
-                        print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_CodecManufacturer :\(String(describing: status?.description))")
-                        return
-                    }
-                    status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!, kExtAudioFileProperty_ClientDataFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size), &LiveTranscript.shared.audioFormat)
-                    if status != noErr {
-                        print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_ClientDataFormat:\(String(describing: status?.description))")
-                        return
-                    }
-                } else {
-                    print("[Transcript Live] Error tapPrepare getAudioFileCFURL nil")
-                    return
-                }
-            }
-            
+        if LiveTranscript.shared.shouldSaveAudioFile{
             // Saving to file...
-            print("Going to write to audiofile...")
+            print("Should to write to audiofile...")
             if LiveTranscript.shared.audioFileRef != nil {
                 status = ExtAudioFileWrite(LiveTranscript.shared.audioFileRef!, UInt32(numberFrames), bufferListInOut)
                 if status != noErr {
@@ -135,7 +108,6 @@ public class LiveTranscript: NSObject {
                 }
                 print("Wrote to audio file")
             }
-            
         } else {
             print("Should not write")
             
@@ -147,7 +119,7 @@ public class LiveTranscript: NSObject {
         do{
             let fileManager = FileManager.default
             let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-            let audioFileName = "\(UUID().uuidString)-TEST-09.wav" // TODO [ENZO] remove -TEST-XX & prints
+            let audioFileName = "\(UUID().uuidString)-TEST-12.wav" // TODO [ENZO] remove -TEST-XX & prints
             LiveTranscript.shared.audioFileName = audioFileName
             let audioFileURL = documentDirectory.appendingPathComponent(audioFileName)
             print("[getAudioFileCFURL] audioFileURL: \(audioFileURL)")
@@ -159,10 +131,41 @@ public class LiveTranscript: NSObject {
         }
     }
     
+    // TODO ENZO check status returned
+    static func createExtAudioFile()->OSStatus?
+    {
+        let cfurl = getAudioFileCFURL()
+        if cfurl != nil{
+            let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16, sampleRate: 44100.0, channels: 1, interleaved: true)
+            var status = ExtAudioFileCreateWithURL( cfurl!, kAudioFileWAVEType, (format?.streamDescription)!, nil, AudioFileFlags.eraseFile.rawValue,  &LiveTranscript.shared.audioFileRef)
+            if status != noErr {
+                print("[Transcript Live] Error tapPrepare ExtAudioFileCreateWithURL :\(String(describing: status.description))")
+                return status
+            }
+            print("Did ExtAudioFileCreateWithURL, gonna set properties...")
+            var codecManufacturer = kAppleSoftwareAudioCodecManufacturer
+            status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!,  kExtAudioFileProperty_CodecManufacturer, UInt32(MemoryLayout<UInt32>.size), &codecManufacturer)
+            if status != noErr {
+                print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_CodecManufacturer :\(String(describing: status.description))")
+                return status
+            }
+            status =  ExtAudioFileSetProperty(LiveTranscript.shared.audioFileRef!, kExtAudioFileProperty_ClientDataFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size), &LiveTranscript.shared.audioFormat)
+            if status != noErr {
+                print("[Transcript Live] Error tapPrepare ExtAudioFileSetProperty kExtAudioFileProperty_ClientDataFormat:\(String(describing: status.description))")
+                return status
+            }
+            return status
+        } else {
+            print("[Transcript Live] Error tapPrepare getAudioFileCFURL nil")
+            return nil
+        }
+    }
+    
     // TODO [ENZO] check that restart works fine
     func restart() {
         LiveTranscript.shared.shouldSaveAudioFile = false
-        LiveTranscript.shared.audioFileRef = nil
+//        LiveTranscript.shared.audioFileRef = nil
+        LiveTranscript.createExtAudioFile()
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.cancel()
         }
@@ -214,7 +217,7 @@ public class LiveTranscript: NSObject {
     // Need to call OSStatus result = ExtAudioFileDispose(extAudioFileRef); to ensure the file not be corrupted
     // via: https://stackoverflow.com/questions/10113977/recording-to-aac-from-remoteio-data-is-getting-written-but-file-unplayable#comment22788263_10129169
     func finish() {
-        if(LiveTranscript.shared.shouldSaveAudioFile){
+        if LiveTranscript.shared.shouldSaveAudioFile && LiveTranscript.shared.audioFileRef != nil{
             let result : OSStatus = ExtAudioFileDispose(LiveTranscript.shared.audioFileRef!);
             print("finished writing fiel dispose")
             if result != noErr {
@@ -224,7 +227,7 @@ public class LiveTranscript: NSObject {
             print("no error")
         }
         LiveTranscript.shared.shouldSaveAudioFile = false
-        LiveTranscript.shared.audioFileRef = nil
+//        LiveTranscript.shared.audioFileRef = nil
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.finish();
         }
