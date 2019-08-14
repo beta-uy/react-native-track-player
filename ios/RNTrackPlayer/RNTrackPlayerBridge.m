@@ -1,4 +1,4 @@
-//
+a//
 //  RNTrackPlayerBridge.m
 //  RNTrackPlayerBridge
 //
@@ -95,11 +95,12 @@ RCT_EXTERN_METHOD(getPosition:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(getState:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
-RCT_EXTERN_METHOD(resetTranscript:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(resetTranscript: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 
-RCT_EXTERN_METHOD(finishTranscript:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(finishTranscript: (NSDictionary *) params
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 @end

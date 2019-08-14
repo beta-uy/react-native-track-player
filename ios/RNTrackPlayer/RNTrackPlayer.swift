@@ -445,11 +445,12 @@ public class RNTrackPlayer: RCTEventEmitter, AudioPlayerDelegate {
     public func getState(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         resolve(player.playerState.rawValue)
     }
-
+    
     // MARK:- BETA FORK
-    @objc(resetTranscript:rejecter:)
-    public func resetTranscript(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        LiveTranscript.shared.restart()
+    @objc(resetTranscript:resolver:rejecter:)
+    public func resetTranscript(params: [String: Any], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        let shouldRestartAudioFile  = params["shouldRestartAudioFile"] ?? false
+        LiveTranscript.shared.restart(shouldRestartAudioFile as! Bool)
         resolve(["success": true])
     }
     
