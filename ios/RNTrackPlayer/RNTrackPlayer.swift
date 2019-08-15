@@ -459,5 +459,12 @@ public class RNTrackPlayer: RCTEventEmitter, AudioPlayerDelegate {
         LiveTranscript.shared.finish()
         resolve(["success": true])
     }
+    
+    
+    @objc(finishAudioFile:rejecter:)
+    public func finishAudioFile(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        let finishedAudioFile = LiveTranscript.shared.finishAudioFile()
+        resolve(["success": finishedAudioFile])
+    }
 }
 

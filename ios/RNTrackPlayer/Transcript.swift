@@ -118,7 +118,7 @@ public class LiveTranscript: NSObject {
         LiveTranscript.shared.recognitionRequest.appendAudioSampleBuffer(sbuf!)
     }
     
-    static func getAudioFileCFURL()->CFURL?{
+    static func getAudioFileCFURL()->CFURL? {
         do{
             let fileManager = FileManager.default
             let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
@@ -165,11 +165,15 @@ public class LiveTranscript: NSObject {
     }
     
     // TODO [ENZO] check that restart works fine
-    func restart() {
+    func restart(_ shouldRestartAudioFile: Bool) {
         //        LiveTranscript.shared.shouldSaveAudioFile = false
         //        LiveTranscript.shared.audioFileRef = nil
         //        LiveTranscript.createExtAudioFile()
         
+        print("[TranscriptLive] shouldResetAudioFile: \(shouldRestartAudioFile)")
+        if shouldRestartAudioFile {
+            LiveTranscript.shared.audioFileRef = nil
+        }
         LiveTranscript.shared.shouldSaveAudioFile = true
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.cancel()
@@ -224,27 +228,34 @@ public class LiveTranscript: NSObject {
         })
     }
     
-    // Need to call OSStatus result = ExtAudioFileDispose(extAudioFileRef); to ensure the file not be corrupted
-    // via: https://stackoverflow.com/questions/10113977/recording-to-aac-from-remoteio-data-is-getting-written-but-file-unplayable#comment22788263_10129169
-    func finish(_ shouldRestartAudioFile: Bool) {
+    func finish() {
         //        if LiveTranscript.shared.shouldSaveAudioFile && LiveTranscript.shared.audioFileRef != nil{
-        print("[TranscriptLive] shouldResetAudioFile: \(shouldRestartAudioFile)")
-        if shouldRestartAudioFile {
-            if  LiveTranscript.shared.audioFileRef != nil{
-                let result : OSStatus = ExtAudioFileDispose(LiveTranscript.shared.audioFileRef!); // check if we should dispose here or on restart, or both
-                print("finished writing fiel dispose")
-                if result != noErr {
-                    print("[Transcript Live finish] Error ExtAudioFileDispose :\(String(describing: result.description))")
-                    return
-                }
-                print("no error")
-            }
-            LiveTranscript.shared.audioFileRef = nil
-        }
+        
+        //        LiveTranscript.shared.audioFileRef = nil
         LiveTranscript.shared.shouldSaveAudioFile = false
         //        LiveTranscript.shared.audioFileRef = nil
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.finish();
+        }
+    }
+    
+    // Need to call OSStatus result = ExtAudioFileDispose(extAudioFileRef); to ensure the file not be corrupted
+    // via: https://stackoverflow.com/questions/10113977/recording-to-aac-from-remoteio-data-is-getting-written-but-file-unplayable#comment22788263_10129169
+    func finishAudioFile()->Bool{
+        print("[TranscriptLive] finishAudioFile finishing file")
+        if  LiveTranscript.shared.audioFileRef != nil{
+            let result : OSStatus = ExtAudioFileDispose(LiveTranscript.shared.audioFileRef!); // check if we should dispose here or on restart, or both
+            print("[TranscriptLive] finishAudioFile finished file dispose")
+            if result != noErr {
+                print("[Transcript Live finish] Error ExtAudioFileDispose :\(String(describing: result.description))")
+                return false
+            }
+            LiveTranscript.shared.recognitionTask != nil
+            print("[TranscriptLive] finishAudioFile finished!")
+            return true
+        } else{
+            print("[TranscriptLive] finishAudioFile no file to finish")
+            return false
         }
     }
     
