@@ -134,7 +134,6 @@ public class LiveTranscript: NSObject {
         }
     }
     
-    // TODO ENZO check status returned
     func createExtAudioFile()->OSStatus?
     {
         let cfurl = LiveTranscript.getAudioFileCFURL()
@@ -164,12 +163,7 @@ public class LiveTranscript: NSObject {
         }
     }
     
-    // TODO [ENZO] check that restart works fine
     func restart(_ shouldRestartAudioFile: Bool) {
-        //        LiveTranscript.shared.shouldSaveAudioFile = false
-        //        LiveTranscript.shared.audioFileRef = nil
-        //        LiveTranscript.createExtAudioFile()
-        
         print("[TranscriptLive] shouldResetAudioFile: \(shouldRestartAudioFile)")
         if shouldRestartAudioFile {
             LiveTranscript.shared.audioFileRef = nil
@@ -184,9 +178,7 @@ public class LiveTranscript: NSObject {
         LiveTranscript.shared.recognitionTask = SFSpeechRecognizer()?.recognitionTask(with: self.recognitionRequest, resultHandler: { (result, error) in
             if let error = error {
                 NSLog("[Transcription Live] [Error] \(error) desc \(error.localizedDescription)")
-                //                LiveTranscript.shared.restart()
             } else {
-                //                LiveTranscript.shared.shouldSaveAudioFile = true
                 NSLog("[Transcription Live] [Result] \(result?.bestTranscription.formattedString)")
                 NSLog("[Transcription Live] [Type] Is Final Transcription: \(result?.isFinal)")
                 for segment in (result?.bestTranscription.segments ?? []) {
@@ -217,10 +209,9 @@ public class LiveTranscript: NSObject {
                                                  encoding: String.Encoding.ascii) {
                         sendEvent(theJSONText)
                     }
-                    // if result?.isFinal ?? false {
-                    //     print("Result was final")
-                    //     LiveTranscript.shared.audioFileRef = nil
-                    // }
+                     if result?.isFinal ?? false {
+                         print("Result was final")
+                     }
                 } catch {
                     print(error.localizedDescription)
                 }
@@ -229,11 +220,7 @@ public class LiveTranscript: NSObject {
     }
     
     func finish() {
-        //        if LiveTranscript.shared.shouldSaveAudioFile && LiveTranscript.shared.audioFileRef != nil{
-        
-        //        LiveTranscript.shared.audioFileRef = nil
         LiveTranscript.shared.shouldSaveAudioFile = false
-        //        LiveTranscript.shared.audioFileRef = nil
         if (LiveTranscript.shared.recognitionTask != nil ){
             LiveTranscript.shared.recognitionTask?.finish();
         }
@@ -260,8 +247,6 @@ public class LiveTranscript: NSObject {
     }
     
     func installTap(player: AVPlayer, newTranscriptEvent: ((String) -> Void)?) {
-        
-        //        LiveTranscript.shared.audioFileRef = nil
         LiveTranscript.shared.player = player
         LiveTranscript.shared.newTranscriptEvent = newTranscriptEvent
         let playerItem = player.currentItem!
