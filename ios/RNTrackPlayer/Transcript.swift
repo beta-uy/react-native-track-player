@@ -122,7 +122,7 @@ public class LiveTranscript: NSObject {
         do{
             let fileManager = FileManager.default
             let documentDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor:nil, create:false)
-            let audioFileName = "\(UUID().uuidString)-TEST-16.wav" // TODO [ENZO] remove -TEST-XX & prints
+            let audioFileName = "\(UUID().uuidString).wav"
             LiveTranscript.shared.audioFileName = audioFileName // TODO this should be somewhere else
             let audioFileURL = documentDirectory.appendingPathComponent(audioFileName)
             print("[getAudioFileCFURL] audioFileURL: \(audioFileURL)")
