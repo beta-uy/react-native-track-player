@@ -6,22 +6,21 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.facebook.react.bridge.*;
 import com.google.android.exoplayer2.C;
 import com.guichaguri.trackplayer.service.MusicBinder;
 import com.guichaguri.trackplayer.service.MusicService;
 import com.guichaguri.trackplayer.service.Utils;
 import com.guichaguri.trackplayer.service.models.Track;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.guichaguri.trackplayer.service.player.ExoPlayback;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.*;
 
 /**
  * @author Guichaguri
@@ -32,12 +31,14 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
     private MusicEvents eventHandler;
     private ArrayDeque<Runnable> initCallbacks = new ArrayDeque<>();
     private boolean connecting = false;
+    private Bundle options;
 
     public MusicModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
 
     @Override
+    @Nonnull
     public String getName() {
         return "TrackPlayerModule";
     }
@@ -67,6 +68,11 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
     public void onServiceConnected(ComponentName name, IBinder service) {
         binder = (MusicBinder)service;
         connecting = false;
+
+        // Reapply options that user set before with updateOptions
+        if (options != null) {
+            binder.updateOptions(options);
+        }
 
         // Triggers all callbacks
         while(!initCallbacks.isEmpty()) {
@@ -127,10 +133,12 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
 
         // States
         constants.put("STATE_NONE", PlaybackStateCompat.STATE_NONE);
+        constants.put("STATE_READY", PlaybackStateCompat.STATE_PAUSED);
         constants.put("STATE_PLAYING", PlaybackStateCompat.STATE_PLAYING);
         constants.put("STATE_PAUSED", PlaybackStateCompat.STATE_PAUSED);
         constants.put("STATE_STOPPED", PlaybackStateCompat.STATE_STOPPED);
         constants.put("STATE_BUFFERING", PlaybackStateCompat.STATE_BUFFERING);
+        constants.put("STATE_CONNECTING", PlaybackStateCompat.STATE_CONNECTING);
 
         // Rating Types
         constants.put("RATING_HEART", RatingCompat.RATING_HEART);
@@ -168,7 +176,8 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
 
     @ReactMethod
     public void updateOptions(ReadableMap data, final Promise callback) {
-        final Bundle options = Arguments.toBundle(data);
+        // keep options as we may need them for correct MetadataManager reinitialization later
+        options = Arguments.toBundle(data);
 
         waitForConnection(() -> {
             binder.updateOptions(options);
@@ -235,8 +244,37 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
                 }
             }
 
-            if (indexes.size() > 0) {
+            if (!indexes.isEmpty()) {
                 binder.getPlayback().remove(indexes, callback);
+            } else {
+                callback.resolve(null);
+            }
+        });
+    }
+
+    @ReactMethod
+    public void updateMetadataForTrack(String id, ReadableMap map, final Promise callback) {
+        waitForConnection(() -> {
+            ExoPlayback playback = binder.getPlayback();
+            List<Track> queue = playback.getQueue();
+            Track track = null;
+            int index = -1;
+
+            for(int i = 0; i < queue.size(); i++) {
+                track = queue.get(i);
+
+                if(track.id.equals(id)) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if(index == -1) {
+                callback.reject("track_not_in_queue", "No track found");
+            } else {
+                track.setMetadata(getReactApplicationContext(), Arguments.toBundle(map), binder.getRatingType());
+                playback.updateTrack(index, track);
+                callback.resolve(null);
             }
         });
     }
