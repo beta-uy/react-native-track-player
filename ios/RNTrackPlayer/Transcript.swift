@@ -249,7 +249,9 @@ public class LiveTranscript: NSObject {
     func installTap(player: AVPlayer, newTranscriptEvent: ((String) -> Void)?) {
         LiveTranscript.shared.player = player
         LiveTranscript.shared.newTranscriptEvent = newTranscriptEvent
-        let playerItem = player.currentItem!
+        guard let playerItem =  player.currentItem else {
+            return;
+        }
         if (playerItem.asset.tracks(withMediaType: AVMediaType.audio).count > 0 ) {
             
             var callbacks = MTAudioProcessingTapCallbacks(
