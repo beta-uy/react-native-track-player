@@ -95,7 +95,13 @@ RCT_EXTERN_METHOD(getPosition:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(getState:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
-<<<<<<< HEAD
+RCT_EXTERN_METHOD(updateMetadataForTrack:(NSString *)trackId
+                  properties:(NSDictionary *)properties
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
+
+// MARK: Beta - Fork
+
 RCT_EXTERN_METHOD(resetTranscript: (NSDictionary *) params
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
@@ -108,11 +114,4 @@ RCT_EXTERN_METHOD(finishTranscript: (RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(finishAudioFile: (RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
-=======
-RCT_EXTERN_METHOD(updateMetadataForTrack:(NSString *)trackId
-                  properties:(NSDictionary *)properties
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject);
-
->>>>>>> upstream/dev
 @end
