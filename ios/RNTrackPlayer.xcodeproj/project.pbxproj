@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7497EED82242D18C00FBB81F /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7497EED72242D18C00FBB81F /* Transcript.swift */; };
 		9A0CF10E2046E5AC0093A5DF /* PitchAlgorithms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CF10D2046E5AC0093A5DF /* PitchAlgorithms.swift */; };
 		9B0E282E1F07D76F00B71D2A /* RNTrackPlayerBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0E282D1F07D76F00B71D2A /* RNTrackPlayerBridge.m */; };
 		9B0E282F1F07D76F00B71D2A /* RNTrackPlayerBridge.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B0E282C1F07D76F00B71D2A /* RNTrackPlayerBridge.h */; };
@@ -41,6 +40,7 @@
 		9B78A2461F3F12BC002B5E3C /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B78A2451F3F12BC002B5E3C /* Track.swift */; };
 		9B78A2481F3F12C9002B5E3C /* MediaURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B78A2471F3F12C9002B5E3C /* MediaURL.swift */; };
 		9BFC1FDD1F61A8E8008795BF /* Capabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BFC1FDC1F61A8E8008795BF /* Capabilities.swift */; };
+		EB0D1C81230DBA5D008CA901 /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7497EED72242D18C00FBB81F /* Transcript.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -294,6 +294,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EB0D1C81230DBA5D008CA901 /* Transcript.swift in Sources */,
 				9B0E282E1F07D76F00B71D2A /* RNTrackPlayerBridge.m in Sources */,
 				9B18C334226357940019375A /* NowPlayingInfoKeyValue.swift in Sources */,
 				9B18C327226357940019375A /* Event.swift in Sources */,
@@ -448,7 +449,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNTrackPlayer/Support/RNTrackPlayer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -466,7 +467,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNTrackPlayer/Support/RNTrackPlayer-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

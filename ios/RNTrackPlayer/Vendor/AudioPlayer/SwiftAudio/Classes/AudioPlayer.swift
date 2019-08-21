@@ -18,6 +18,9 @@ public class AudioPlayer: AVPlayerWrapperDelegate {
     var wrapper: AVPlayerWrapperProtocol {
         return _wrapper
     }
+
+    // MARK: Beta Fork
+    var newTranscriptEvent: ((String) -> Void)?
     
     public let nowPlayingInfoController: NowPlayingInfoControllerProtocol
     public let remoteCommandController: RemoteCommandController
